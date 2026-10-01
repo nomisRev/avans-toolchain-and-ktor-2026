@@ -92,20 +92,34 @@ class: compact
 # Save Amper diagnostics too
 
 ```yaml
-# Check step: retain output without hiding a failure
-- name: Tests and registered checks
-  shell: bash
-  run: |
-    mkdir -p ci-output
-    set -o pipefail
-    ./kotlin check 2>&1 | tee ci-output/check.log
-
-- name: Save diagnostics
-  if: always()
+- name: Save test reports and logs
+  if: failure()
   uses: actions/upload-artifact@v7
   with:
     name: amper-reports
-    path: ci-output/
+    path: |
+      build/reports/
+```
+
+<!--
+The full example also saves build output and any configured reports/ or build/maven-target/ output. Do not pretend the toolchain produces Gradle's report layout by default. The explicit log artifact works even before adding report plugins.
+Bash pipefail preserves failure from the command on the left of tee. No continue-on-error for required tests. Full file: examples/github-actions/amper.yml.
+-->
+
+---
+class: compact
+---
+
+# Save Amper diagnostics too
+
+```yaml
+- name: Save test reports and logs
+  uses: actions/upload-artifact@v7
+  with:
+    name: amper-reports
+    path: |
+      build/reports/
+      build/logs/
 ```
 
 <!--
