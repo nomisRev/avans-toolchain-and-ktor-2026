@@ -1,0 +1,19 @@
+# Pull the published image. No Dockerfile or Kotlin build runs on Render.
+services:
+  - type: web
+    name: avans-college-auth
+    runtime: image
+    plan: free
+    region: frankfurt
+    image:
+      url: docker.io/vergauwensimon/avans-college-auth:demo-1
+    healthCheckPath: /health
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: "10000"
+      - key: JAVA_TOOL_OPTIONS
+        value: "-Xmx256m -XX:MaxDirectMemorySize=64m"
+      - key: JWT_SECRET_BASE64
+        sync: false

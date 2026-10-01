@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.slidev/
+.review/
+slides-export/
+*.pdf
+dist-tooling/
+build/
+.kotlin/
+.env
+.env.*

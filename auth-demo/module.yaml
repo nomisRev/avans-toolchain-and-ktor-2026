@@ -1,0 +1,40 @@
+product: jvm/app
+
+dependencies:
+  - io.ktor:ktor-server-netty:3.6.0
+  - io.ktor:ktor-server-auth-jwt:3.6.0
+  - io.ktor:ktor-server-content-negotiation:3.6.0
+  - io.ktor:ktor-serialization-kotlinx-json:3.6.0
+  - io.ktor:ktor-server-status-pages:3.6.0
+  - io.ktor:ktor-server-body-limit:3.6.0
+  - io.ktor:ktor-server-rate-limit:3.6.0
+  - org.bouncycastle:bcprov-jdk18on:1.84
+  - ch.qos.logback:logback-classic:1.5.35
+
+test-dependencies:
+  - io.ktor:ktor-server-test-host:3.6.0
+  - io.ktor:ktor-client-content-negotiation:3.6.0
+
+settings:
+  kotlin:
+    version: 2.4.10
+    serialization: enabled
+  jvm:
+    jdk: { version: 21 }
+    release: 21
+    mainClass: college.ServerKt
+
+plugins:
+  ktor-plugin:
+    enabled: true
+    docker:
+      jreVersion: 21
+      platforms: [linux/amd64]
+      imageTag: demo-1
+      environmentVariables:
+        HOST: 0.0.0.0
+      hostEnvironmentVariables: [JWT_SECRET_BASE64]
+      externalRegistry:
+        namespace: vergauwensimon
+        project: avans-college-auth
+        credHelper: desktop

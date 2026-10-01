@@ -1,0 +1,8 @@
+modules:
+  - auth-demo
+  - plugins/jib-plugin
+  - plugins/ktor-plugin
+
+plugins:
+  - plugins/jib-plugin
+  - plugins/ktor-plugin
