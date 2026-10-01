@@ -1,0 +1,2 @@
+[libraries]
+jib-core = "com.google.cloud.tools:jib-core:0.28.2"

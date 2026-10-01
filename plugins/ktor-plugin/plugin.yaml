@@ -1,0 +1,55 @@
+# Mirrors the Ktor Gradle plugin Docker tasks. Run with `./kotlin do <command>` or `./kotlin task :<module>:<task>@ktor-plugin`.
+tasks:
+  buildImage:
+    action: !io.ktor.toolchain.buildImage
+      runtimeClasspath: ${module.runtimeClasspath}
+      jar: ${module.jar}
+      classes: ${module.classes}
+      resources: ${module.resources}
+      docker: ${pluginSettings.docker}
+      moduleJdkVersion: ${module.settings.jvm.jdk.version}
+      moduleJavaRelease: ${module.settings.jvm.release}
+      outputDir: ${taskOutputDir}
+
+  publishImageToLocalRegistry:
+    action: !io.ktor.toolchain.publishImageToLocalRegistry
+      runtimeClasspath: ${module.runtimeClasspath}
+      jar: ${module.jar}
+      classes: ${module.classes}
+      resources: ${module.resources}
+      docker: ${pluginSettings.docker}
+      moduleJdkVersion: ${module.settings.jvm.jdk.version}
+      moduleJavaRelease: ${module.settings.jvm.release}
+      outputDir: ${taskOutputDir}
+
+  publishImage:
+    action: !io.ktor.toolchain.publishImage
+      runtimeClasspath: ${module.runtimeClasspath}
+      jar: ${module.jar}
+      classes: ${module.classes}
+      resources: ${module.resources}
+      docker: ${pluginSettings.docker}
+      moduleJdkVersion: ${module.settings.jvm.jdk.version}
+      moduleJavaRelease: ${module.settings.jvm.release}
+      outputDir: ${taskOutputDir}
+
+  runDocker:
+    action: !io.ktor.toolchain.runDocker
+      runtimeClasspath: ${module.runtimeClasspath}
+      jar: ${module.jar}
+      classes: ${module.classes}
+      resources: ${module.resources}
+      docker: ${pluginSettings.docker}
+      moduleJdkVersion: ${module.settings.jvm.jdk.version}
+      moduleJavaRelease: ${module.settings.jvm.release}
+      outputDir: ${taskOutputDir}
+
+commands:
+  - name: buildImage
+    performedBy: buildImage
+  - name: publishImageToLocalRegistry
+    performedBy: publishImageToLocalRegistry
+  - name: publishImage
+    performedBy: publishImage
+  - name: runDocker
+    performedBy: runDocker

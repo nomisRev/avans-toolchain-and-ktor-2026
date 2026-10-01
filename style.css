@@ -1,0 +1,57 @@
+:root {
+  --college-purple: #7954f6;
+  --college-pink: #eb55e6;
+  --code-window-columns: 80;
+}
+.slidev-layout { padding: 3rem 4rem; font-size: 2rem; line-height: 1.42; }
+.slidev-layout h1 { margin-bottom: 1.4rem; font-size: 3.6rem; line-height: 1.1; letter-spacing: -0.035em; font-weight: 700; }
+.slidev-layout h2 { font-size: 2.25rem; margin-bottom: 1rem; }
+.slidev-layout p { margin: 1rem 0; line-height: 1.42; }
+.slidev-layout li { margin: 0.65rem 0; }
+.college-cover h1 { font-size: 5.6rem !important; background: linear-gradient(120deg, var(--college-purple), var(--college-pink)); background-clip: text; -webkit-background-clip: text; color: transparent; }
+.college-cover h2 { font-size: 2.3rem; }
+.section-slide h1 { max-width: 56rem; font-size: 4.5rem; }
+.slidev-layout blockquote { border: 0; border-left: 5px solid var(--college-purple); padding: 0.5rem 1.4rem; background: transparent; font-size: 2.2rem; }
+.slidev-layout blockquote p { margin: 0; line-height: 1.35; font-family: var(--slidev-font-sans); }
+.slidev-layout table { width: 100%; font-size: 1.65rem; }
+.slidev-layout th, .slidev-layout td { padding: 0.8rem 0.6rem; }
+.source { margin-top: 1rem; font-size: 1rem; opacity: 0.7; }
+.caption { font-size: 1.4rem; opacity: 0.8; }
+.flow { display: flex; align-items: center; gap: 1.5rem; margin: 2.5rem 0; }
+.flow > div { flex: 1; border-top: 4px solid var(--college-purple); padding-top: 1rem; }
+.flow strong { display: block; font-size: 2rem; }
+.flow small { display: block; font-size: 1.4rem; margin-top: 0.6rem; }
+.flow > span { color: var(--college-purple); }
+.compact { --code-window-font-size: 1.45rem; }
+.kodee-character { z-index: 0; }
+.slidev-layout > :not(.kodee-character) { position: relative; z-index: 1; }
+
+/* Project tree in IntelliJ's new-UI style (ported from opinionated-ktor-services). `<em>` is the role column. */
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree { position: relative; margin: 0.4rem 0 1.2rem; font-size: 1.9rem; line-height: 1.5; }
+.tree ul { margin-left: 0.9rem; padding-left: 2.1rem; border-left: 2px solid color-mix(in srgb, currentColor 12%, transparent); }
+.tree li { list-style: none !important; margin: 0; }
+.tree li::marker { content: ''; }
+.tree li > span { display: inline-flex; align-items: center; gap: 0.75rem; }
+.tree li > span::before { content: ''; flex: 0 0 auto; width: 1.9rem; height: 1.9rem; background: no-repeat center / contain; }
+.tree .dir > span::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ebecf0' stroke='%236c707e' stroke-width='1.7' stroke-linejoin='round'%3E%3Cpath d='M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z'/%3E%3C/svg%3E"); }
+.tree .pkg > span::before { background-image: url('/tree/package.svg'); }
+html.dark .tree .pkg > span::before { background-image: url('/tree/package_dark.svg'); }
+html.dark .tree .dir > span::before { filter: invert(0.85) hue-rotate(180deg); }
+.tree .kt > span::before { background-image: url('/kotlin.svg'); }
+html.dark .tree .kt > span::before { background-image: url('/kotlin_dark.svg'); }
+.tree .gradle > span::before { background-image: url('/gradle.svg'); }
+html.dark .tree .gradle > span::before { background-image: url('/gradle_dark.svg'); }
+.tree .src-root > span::before { background-image: url('/tree/src-root.svg'); }
+.tree .test-root > span::before { background-image: url('/tree/test-root.svg'); }
+.tree .yaml > span::before { background-image: url('/tree/yaml.svg'); }
+.tree .script > span::before { background-image: url('/tree/script.svg'); }
+html.dark .tree :is(.src-root, .test-root, .yaml, .script) > span::before { filter: invert(0.85) hue-rotate(180deg); }
+/* Taller trees (the build-tool slides) step down a little so the captions still fit. */
+.tree-dense .tree { font-size: 1.7rem; line-height: 1.42; }
+.tree-dense .tree li > span::before { width: 1.7rem; height: 1.7rem; }
+.tree-dense .tree em { font-size: 1.45rem; }
+.tree .new > span { color: var(--college-purple); font-weight: 700; }
+/* Role column: absolutely placed against .tree so it lines up across nesting levels. */
+.tree em { position: absolute; left: 30rem; font-style: normal; font-size: 1.55rem; opacity: 0.6; }
+.tree em::before { content: '← '; color: var(--college-purple); opacity: 0.8; }

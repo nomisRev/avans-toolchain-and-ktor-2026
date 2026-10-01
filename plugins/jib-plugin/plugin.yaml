@@ -1,0 +1,66 @@
+# Mirrors the Jib Gradle plugin tasks. Run with `./kotlin do <command>` or `./kotlin task :<module>:<task>@jib-plugin`.
+tasks:
+  jib:
+    action: !io.ktor.toolchain.jib.jib
+      runtimeClasspath: ${module.runtimeClasspath}
+      jar: ${module.jar}
+      classes: ${module.classes}
+      resources: ${module.resources}
+      extraDirectory: ${module.rootDir}/jib
+      from: ${pluginSettings.from}
+      to: ${pluginSettings.to}
+      container: ${pluginSettings.container}
+      extraDirectories: ${pluginSettings.extraDirectories}
+      dockerClient: ${pluginSettings.dockerClient}
+      outputPaths: ${pluginSettings.outputPaths}
+      allowInsecureRegistries: ${pluginSettings.allowInsecureRegistries}
+      containerizingMode: ${pluginSettings.containerizingMode}
+      moduleName: ${module.name}
+      moduleJdkVersion: ${module.settings.jvm.jdk.version}
+      outputDir: ${taskOutputDir}
+
+  jibDockerBuild:
+    action: !io.ktor.toolchain.jib.jibDockerBuild
+      runtimeClasspath: ${module.runtimeClasspath}
+      jar: ${module.jar}
+      classes: ${module.classes}
+      resources: ${module.resources}
+      extraDirectory: ${module.rootDir}/jib
+      from: ${pluginSettings.from}
+      to: ${pluginSettings.to}
+      container: ${pluginSettings.container}
+      extraDirectories: ${pluginSettings.extraDirectories}
+      dockerClient: ${pluginSettings.dockerClient}
+      outputPaths: ${pluginSettings.outputPaths}
+      allowInsecureRegistries: ${pluginSettings.allowInsecureRegistries}
+      containerizingMode: ${pluginSettings.containerizingMode}
+      moduleName: ${module.name}
+      moduleJdkVersion: ${module.settings.jvm.jdk.version}
+      outputDir: ${taskOutputDir}
+
+  jibBuildTar:
+    action: !io.ktor.toolchain.jib.jibBuildTar
+      runtimeClasspath: ${module.runtimeClasspath}
+      jar: ${module.jar}
+      classes: ${module.classes}
+      resources: ${module.resources}
+      extraDirectory: ${module.rootDir}/jib
+      from: ${pluginSettings.from}
+      to: ${pluginSettings.to}
+      container: ${pluginSettings.container}
+      extraDirectories: ${pluginSettings.extraDirectories}
+      dockerClient: ${pluginSettings.dockerClient}
+      outputPaths: ${pluginSettings.outputPaths}
+      allowInsecureRegistries: ${pluginSettings.allowInsecureRegistries}
+      containerizingMode: ${pluginSettings.containerizingMode}
+      moduleName: ${module.name}
+      moduleJdkVersion: ${module.settings.jvm.jdk.version}
+      outputDir: ${taskOutputDir}
+
+commands:
+  - name: jib
+    performedBy: jib
+  - name: jibDockerBuild
+    performedBy: jibDockerBuild
+  - name: jibBuildTar
+    performedBy: jibBuildTar

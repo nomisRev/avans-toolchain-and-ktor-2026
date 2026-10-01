@@ -1,0 +1,32 @@
+@base = https://avans-college-auth.onrender.com
+
+### Register (409 if this username already exists)
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{"username":"student","password":"a long classroom passphrase"}
+
+### Login; JetBrains HTTP Client stores the token for the next request
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{"username":"student","password":"a long classroom passphrase"}
+
+> {% client.global.set("accessToken", response.body.accessToken); %}
+
+### The authenticated principal
+GET {{base}}/me
+Authorization: Bearer {{accessToken}}
+
+### Missing token → 401
+GET {{base}}/me
+
+### Invalid token → 401
+GET {{base}}/me
+Authorization: Bearer invalid-token
+
+### Wrong password → 401
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{"username":"student","password":"a different classroom passphrase"}

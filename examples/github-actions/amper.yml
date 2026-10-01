@@ -1,0 +1,54 @@
+# Copy to .github/workflows/build.yml in a Kotlin Toolchain 0.12.2 backend repo.
+# Assumes a committed executable ./kotlin wrapper at the repository root.
+name: Amper CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  KOTLIN_CLI_BOOTSTRAP_CACHE_DIR: ${{ github.workspace }}/.cache/kotlin/bootstrap
+  KOTLIN_SHARED_CACHE_DIR: ${{ github.workspace }}/.cache/kotlin/shared
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Cache toolchain downloads
+        uses: actions/cache@v6
+        with:
+          path: .cache/kotlin
+          key: >-
+            ktc-${{ runner.os }}-${{ runner.arch }}-${{
+            hashFiles('kotlin', '**/*.yaml', '**/*.toml') }}
+          restore-keys: ktc-${{ runner.os }}-${{ runner.arch }}-
+      - name: Build
+        shell: bash
+        run: |
+          mkdir -p ci-output
+          set -o pipefail
+          ./kotlin build 2>&1 | tee ci-output/build.log
+      - name: Tests and registered checks
+        shell: bash
+        run: |
+          set -o pipefail
+          ./kotlin check 2>&1 | tee ci-output/check.log
+      # This does not auto-install formatting, detekt or coverage verification.
+      - name: Save diagnostics and optional reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: amper-reports
+          path: |
+            ci-output/
+            reports/
+            build/reports/
+            build/maven-target/
+          if-no-files-found: warn
+          retention-days: 7
