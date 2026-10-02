@@ -6,9 +6,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator
 import org.bouncycastle.crypto.params.Argon2Parameters
+import org.bouncycastle.util.Arrays
 
 // Store these parameters with each hash, so future cost changes can be migrated.
-data class Argon2Cost(
+data class Argon2Config(
     val memoryKiB: Int = 65_536,
     val iterations: Int = 3,
     val parallelism: Int = 4,
@@ -19,13 +20,19 @@ class PasswordHash
 internal constructor(
     internal val salt: ByteArray,
     internal val digest: ByteArray,
-    internal val cost: Argon2Cost,
+    internal val cost: Argon2Config,
     internal val version: Int = Argon2Parameters.ARGON2_VERSION_13,
 )
 
-class Passwords(private val cost: Argon2Cost = Argon2Cost()) {
+class Passwords(
+    private val cost: Argon2Config = Argon2Config(),
+) {
     private val random = SecureRandom()
-    // Both hash AND verify share this bound: at most two memory-heavy operations.
+
+
+    /**
+     * Encryption takes a lot of CPU time, so we need to prevent all CPUs getting taken at the same time.
+     */
     private val dispatcher = Dispatchers.IO.limitedParallelism(2)
 
     suspend fun hash(password: String): PasswordHash =
@@ -47,7 +54,7 @@ class Passwords(private val cost: Argon2Cost = Argon2Cost()) {
     private fun derive(
         password: String,
         salt: ByteArray,
-        cost: Argon2Cost,
+        cost: Argon2Config,
         version: Int = Argon2Parameters.ARGON2_VERSION_13,
     ): ByteArray {
         val parameters =
@@ -64,7 +71,7 @@ class Passwords(private val cost: Argon2Cost = Argon2Cost()) {
                 Argon2BytesGenerator().apply { init(parameters) }.generateBytes(chars, output)
             }
         } finally {
-            chars.fill('\u0000')
+            Arrays.clear(chars)
             parameters.clear()
         }
     }

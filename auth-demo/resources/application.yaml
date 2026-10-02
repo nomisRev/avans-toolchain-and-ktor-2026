@@ -1,0 +1,8 @@
+server:
+  port: "$PORT:8080"
+  host: "$HOST:localhost"
+
+jwt:
+  secret: "JWT_SECRET:JNswxCLClIqIc/UG0QseMQLX+fFEx4mzcbETU6aGC7c="
+  issuer: "avans-college-auth"
+  audience: "avans-college-api"

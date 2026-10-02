@@ -44,8 +44,6 @@ on:
   pull_request:
   push:
     branches: [main]
-permissions:
-  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -65,7 +63,7 @@ Action versions checked against current primary docs on 2026-09-29. Files in exa
 class: compact
 ---
 
-# Amper: the wrapper provisions the toolchain
+# Kotlin: the wrapper provisions the toolchain
 
 ```yaml
 # Under jobs.build.steps, after checkout
@@ -89,14 +87,14 @@ The actual copyable workflow tees output into ci-output with pipefail so failed 
 class: compact
 ---
 
-# Save Amper diagnostics too
+# Save Kotlin diagnostics too
 
 ```yaml
 - name: Save test reports and logs
   if: failure()
   uses: actions/upload-artifact@v7
   with:
-    name: amper-reports
+    name: kotlin-reports
     path: |
       build/reports/
 ```
@@ -110,13 +108,13 @@ Bash pipefail preserves failure from the command on the left of tee. No continue
 class: compact
 ---
 
-# Save Amper diagnostics too
+# Save Kotlin diagnostics too
 
 ```yaml
 - name: Save test reports and logs
   uses: actions/upload-artifact@v7
   with:
-    name: amper-reports
+    name: kotlin-reports
     path: |
       build/reports/
       build/logs/
@@ -129,43 +127,103 @@ Bash pipefail preserves failure from the command on the left of tee. No continue
 
 ---
 
-# Add quality gates after the basic build works
+# Quality gates are pinned CLIs in CI
 
-| Gate | Gradle | Amper / Kotlin Toolchain |
+> Be wary of the defaults, only use what you want to enforce.
+
+| Gate | Tool | Fails the step when |
 | --- | --- | --- |
-| Formatting | `spotlessCheck` / `ktlintCheck` | CLI or a registered local check |
-| Analysis | `detektMain` | detekt CLI / local plugin |
-| Coverage | Kover report + `koverVerify` | Agent/CLI or JaCoCo Maven bridge + verification |
-
-Configure the tool first; then add its command as a workflow step.
+| Formatting | ktfmt 0.64 | a file would change |
+| Style | ktlint 1.8.0 | a rule is violated |
+| Analysis | detekt 1.23.8 | there are findings |
+| Coverage | Kover 0.9.11 | line coverage < 80% |
 
 <!--
-This preserves the original questions without making the audience learn every tool before their first workflow. Detailed syntax is available in slides.tooling.md.
-ktfmt is my formatting default; kotlin format is planned, not assumed on 0.12.2. Choose ktlint rules if useful, and avoid fighting formatters. Kover is my Kotlin/JVM coverage default. A generated HTML/XML report alone is not a failing threshold gate. Amper check doesn't auto-register any of these integrations.
+No build plugins: every tool is a pinned jar downloaded in the workflow. Each command was run on a Kotlin Toolchain 0.12.2 project, from a clean build, in the workflow's order. Students run the same commands locally.
+kotlin format (ktfmt-based) is planned, not assumed on 0.12.2. Kover is my Kotlin/JVM default; JaCoCo through the Maven bridge is the alternative at the end.
+-->
+
+---
+class: compact
+zoom: 0.9
+---
+
+# Pin every tool's version
+
+```yaml
+env:
+  DETEKT: 1.23.8
+  GH: https://github.com
+
+steps:
+  - name: Download CLI tools
+    run: |
+      mkdir -p tools && cd tools
+      curl -fsSLO $GH/detekt/detekt/releases/download/v$DETEKT/detekt-cli-$DETEKT-all.jar
+      ...
+```
+
+The wrapper brings its own JDK; the jars need one on `PATH`.
+
+<!--
+The full file also downloads kover-jvm-agent and kover-cli from Maven Central, marks ktlint executable, and caches tools/ keyed on the four versions (≈210 MB uncached). curl -f fails the step on a 404 instead of saving an error page.
 -->
 
 ---
 class: compact
 ---
 
-# Example: add the configured Kover gate
+# Each check is one command
 
 ```yaml
-# Gradle steps, once Kover and its threshold are configured
-- name: Coverage report
-  run: ./gradlew koverHtmlReport koverXmlReport
-
-- name: Coverage minimum
-  run: ./gradlew koverVerify
+- name: Analysis (detekt)
+  run: >-
+    java -jar tools/detekt-cli-$DETEKT-all.jar --input $(echo $SOURCES | tr ' ' ',')
+    --config config/detekt.yml --build-upon-default-config
+    --report sarif:build/reports/detekt.sarif
 ```
 
-Keep the final report upload on `if: always()`.
-
-For Amper, use the same pattern: **produce report → verify → upload**.
+A nonzero exit code fails the step.
 
 <!--
-The baseline Gradle build step already runs tests. Kover may rerun/instrument relevant tests as needed; Gradle task reuse is managed by the plugin. Don't infer a minimum just from applying Kover; show the existing minBound example in the optional deck if asked.
-For Amper's Maven bridge, ./kotlin task :backend:jacoco-maven-plugin.report requires enabling the Maven goals first and selecting the actual module name. A separate verifier must reject absent/empty coverage. We haven't run that on the students' backend, so the baseline Amper YAML doesn't pretend to enforce coverage yet.
+ktfmt takes $SOURCES as-is; ktlint takes `$(printf '%s/**/*.kt ' $SOURCES)` after `set -f`, because ktlint expands ** itself (see the full file). Exit codes checked by injecting a violation into the shared module: ktfmt 1, ktlint 1, detekt 2, so every module really is checked. Locally, drop --dry-run --set-exit-if-changed to let ktfmt rewrite the files.
+detekt runs without --classpath here, so type-aware rules stay silent; the toolchain doesn't print a classpath for it. Baseline existing debt with --create-baseline --baseline detekt-baseline.xml, then pass --baseline in CI.
+-->
+
+---
+class: compact
+zoom: 0.9
+---
+
+# Maven plugins in toolchain
+
+```yaml toolchain
+# project.yaml
+mavenPlugins:
+  - org.jacoco:jacoco-maven-plugin:0.8.15
+```
+
+```yaml toolchain
+# auth-demo/module.yaml
+mavenPlugins:
+  jacoco-maven-plugin.prepare-agent: enabled
+  jacoco-maven-plugin.report: enabled
+  jacoco-maven-plugin.check:
+    enabled: true
+    configuration:
+      haltOnFailure: true
+      rules:
+        - >-
+          <rule><element>BUNDLE</element><limits><limit>
+          <counter>LINE</counter><value>COVEREDRATIO</value>
+          <minimum>0.80</minimum></limit></limits></rule>
+```
+
+`./kotlin task :auth-demo:jacoco-maven-plugin.check` → tests, then the gate
+
+<!--
+The alternative to Kover's CLI + script: configuration only, no downloads, and a real gate. Verified in a scratch project on 0.12.2. prepare-agent attaches to every ./kotlin test once enabled, so pick JaCoCo or Kover, not both. Report: build/maven-target/reports/jacoco/index.html.
+Two gotchas: without haltOnFailure: true a violation is only a warning (Maven's default isn't applied). And a clean `./kotlin build`/`test` over all modules hits a race in build/maven-target/classes when plugin modules exist; scope commands with -m auth-demo.
 -->
 
 ---
@@ -174,12 +232,12 @@ For Amper's Maven bridge, ./kotlin task :backend:jacoco-maven-plugin.report requ
 
 1. Commit the chosen workflow and open a pull request
 2. Change one assertion so the test fails
-3. Find the failed step and download its reports
+3. Find the failed step and download `kotlin-reports`
 4. Restore the assertion and confirm the job passes
 
 Make that CI job a required check for merging.
 
 <!--
-Demo exercise, not actions taken on a remote repository by this task. Workflows are supplied as examples only. After the check has run, select its actual name in the repository ruleset/branch protection settings. Required checks should run for every PR they are required on; avoid path filters that leave the expected check pending.
+Demo exercise, not actions taken on a remote repository by this task. Workflows are supplied as examples only. Variation: break formatting instead and watch the ktfmt step fail before any test runs. After the check has run, select its actual name in the repository ruleset/branch protection settings. Required checks should run for every PR they are required on; avoid path filters that leave the expected check pending.
 Transition: “Now that tests run on every PR, how do we structure the backend so they are easy to write?” Go directly to the existing architecture section.
 -->

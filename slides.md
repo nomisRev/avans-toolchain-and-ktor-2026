@@ -42,7 +42,7 @@ Each build-tool intro has a 5-minute core and optional demo/detail to extend it 
 1. **Toolchain** — describe, build and test a module
 2. **GitHub Actions** — run either build on every PR
 3. **Architecture** — make the backend easy to test
-4. **Authentication** — Argon2id, JWTs and typed Ktor routes
+4. **Authentication** — Argon2id, JWTs, roles and a Ktor client
 
 <!--
 Opening motivation, spoken rather than a separate wall of questions: “Dan bouw ik liever niet zelf iets wat straks vanzelf komt.”

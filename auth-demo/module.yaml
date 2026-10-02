@@ -1,38 +1,40 @@
 product: jvm/app
 
 dependencies:
-  - io.ktor:ktor-server-netty:3.6.0
-  - io.ktor:ktor-server-auth-jwt:3.6.0
-  - io.ktor:ktor-server-content-negotiation:3.6.0
-  - io.ktor:ktor-serialization-kotlinx-json:3.6.0
-  - io.ktor:ktor-server-status-pages:3.6.0
-  - io.ktor:ktor-server-body-limit:3.6.0
-  - io.ktor:ktor-server-rate-limit:3.6.0
+  - $ktor.server.netty
+  - $ktor.server.auth.jwt
+  - $ktor.server.contentNegotiation
+  - $ktor.serialization.kotlinx.json
+  - $ktor.server.statusPages
+  - $ktor.server.bodyLimit
+  - $ktor.server.rateLimit
+  - $ktor.server.config.yaml
   - org.bouncycastle:bcprov-jdk18on:1.84
   - ch.qos.logback:logback-classic:1.5.35
 
 test-dependencies:
-  - io.ktor:ktor-server-test-host:3.6.0
-  - io.ktor:ktor-client-content-negotiation:3.6.0
+  - $ktor.server.testHost
+  - $ktor.client.contentNegotiation
 
 settings:
+  ktor:
+    enabled: true
+    version: 3.6.0
   kotlin:
     version: 2.4.10
     serialization: enabled
   jvm:
-    jdk: { version: 21 }
-    release: 21
+    jdk: { version: 25 }
+    release: 25
     mainClass: college.ServerKt
 
 plugins:
   ktor-plugin:
     enabled: true
     docker:
-      jreVersion: 21
+      jreVersion: 25
       platforms: [linux/amd64]
-      imageTag: demo-1
-      environmentVariables:
-        HOST: 0.0.0.0
+      imageTag: 1.0.1
       hostEnvironmentVariables: [JWT_SECRET_BASE64]
       externalRegistry:
         namespace: vergauwensimon

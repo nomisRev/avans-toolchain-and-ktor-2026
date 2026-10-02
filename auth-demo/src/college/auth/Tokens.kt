@@ -7,36 +7,15 @@ import java.time.Clock
 import java.util.Base64
 import kotlinx.serialization.Serializable
 
+@Serializable
 class JwtSettings(
-    secret: ByteArray,
+    val secret: String,
     val issuer: String = "avans-college-auth",
     val audience: String = "avans-college-api",
 ) {
-    internal val secret = secret.copyOf()
-
     init {
-        require(secret.size >= 32) { "JWT signing key must contain at least 32 random bytes" }
+        require(secret.toByteArray().size >= 32) { "JWT signing key must contain at least 32 random bytes" }
         require(issuer.isNotBlank() && audience.isNotBlank())
-    }
-
-    companion object {
-        fun fromEnvironment(env: Map<String, String> = System.getenv()): JwtSettings {
-            val encoded =
-                requireNotNull(env["JWT_SECRET_BASE64"]) {
-                    "Set JWT_SECRET_BASE64 to a Base64-encoded random key (openssl rand -base64 32)"
-                }
-            val secret =
-                try {
-                    Base64.getDecoder().decode(encoded)
-                } catch (_: IllegalArgumentException) {
-                    error("JWT_SECRET_BASE64 must be valid Base64")
-                }
-            return JwtSettings(
-                secret,
-                env["JWT_ISSUER"] ?: "avans-college-auth",
-                env["JWT_AUDIENCE"] ?: "avans-college-api",
-            )
-        }
     }
 }
 
@@ -68,6 +47,7 @@ class Tokens(settings: JwtSettings, private val clock: Clock = Clock.systemUTC()
                 .withIssuer(issuer)
                 .withAudience(audience)
                 .withSubject(user.id)
+                .withClaim("username", user.username)
                 .withIssuedAt(now)
                 .withExpiresAt(now.plusSeconds(900))
                 .sign(algorithm)

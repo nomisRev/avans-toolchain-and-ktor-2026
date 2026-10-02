@@ -55,3 +55,110 @@ html.dark .tree :is(.src-root, .test-root, .yaml, .script) > span::before { filt
 /* Role column: absolutely placed against .tree so it lines up across nesting levels. */
 .tree em { position: absolute; left: 30rem; font-style: normal; font-size: 1.55rem; opacity: 0.6; }
 .tree em::before { content: '← '; color: var(--college-purple); opacity: 0.8; }
+
+/* Architecture: application lifecycle. One row of stages; every `.lc-step` is one click. */
+.lifecycle { display: flex; align-items: center; margin-top: 7rem; }
+.lc-step { display: flex; flex: 1 1 auto; align-items: center; }
+.lc-box {
+  position: relative;
+  flex: 0 0 auto;
+  max-width: 12rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 0.55rem;
+  background: var(--college-purple);
+  color: #fff;
+  font-size: 1.2rem; overflow-wrap: anywhere;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+.lc-arrow {
+  position: relative;
+  flex: 1 1 3rem;
+  min-width: 2.6rem;
+  height: 0.2rem;
+  margin: 0 0.5rem;
+  background: var(--college-purple);
+}
+.lc-arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -0.05rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-top: 0.2rem solid var(--college-purple);
+  border-right: 0.2rem solid var(--college-purple);
+  transform: translateY(-50%) rotate(45deg);
+}
+.lc-arrow span {
+  position: absolute;
+  left: 50%;
+  bottom: 2.4rem;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: var(--college-purple);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.lc-notes {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 1.1rem);
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+  color: var(--college-purple);
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: left;
+}
+.lc-notes li::before { content: '• '; }
+.lc-timer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 1rem);
+  padding-top: 0.45rem;
+  border-top: 0.22rem solid #e5484d;
+  color: #e5484d;
+  font-size: 1.3rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lc-timer::before, .lc-timer::after {
+  content: '';
+  position: absolute;
+  top: -0.42rem;
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 50%;
+  background: #e5484d;
+}
+.lc-timer::before { left: -0.2rem; }
+.lc-timer::after { right: -0.2rem; }
+
+/* Lesson 6: authentication flow between client, Ktor server and identity platform. */
+.auth-flow { display: block; width: 100%; height: auto; margin-top: 0.2rem; }
+.auth-flow :is(rect, path, line, circle) {
+  fill: none;
+  stroke: var(--college-purple);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.auth-flow .af-fill { fill: var(--college-purple); stroke: none; }
+.auth-flow text { fill: var(--college-purple); font-size: 26px; font-weight: 600; }
+.auth-flow .af-list text { fill: var(--fundamentals-ink); font-weight: 500; }
+.auth-flow .af-list circle { fill: var(--fundamentals-ink); stroke: none; }
+
+/* Closing: takeaway list, then the QR code from the Keynote deck. */
+.closing-qr { display: block; width: 11.5rem; height: 11.5rem; margin: 1.6rem auto 0.9rem; border-radius: 0.5rem; }
+
+.lc-notes li { list-style: none !important; }
+.lc-notes li::marker { content: ''; }
+.lc-arrow span { bottom: 3.2rem; }
+.lc-step:nth-child(odd) .lc-arrow span { bottom: 5.6rem; }
+.lc-notes { font-size: 1.15rem; }
