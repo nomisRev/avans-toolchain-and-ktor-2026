@@ -15,5 +15,5 @@ services:
         value: "10000"
       - key: JAVA_TOOL_OPTIONS
         value: "-Xmx256m -XX:MaxDirectMemorySize=64m"
-      - key: JWT_SECRET_BASE64
+      - key: JWT_SECRET
         sync: false

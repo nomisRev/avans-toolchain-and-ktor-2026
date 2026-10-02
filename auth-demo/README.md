@@ -11,11 +11,11 @@ From this directory on macOS/Linux:
 ```sh
 ./kotlin build
 ./kotlin test
-export JWT_SECRET_BASE64="$(openssl rand -base64 32)"
+export JWT_SECRET="$(openssl rand -base64 32)"
 ./kotlin run
 ```
 
-The wrapper provisions the toolchain and JDK. Windows has the equivalent `kotlin.bat`; set `JWT_SECRET_BASE64` to a Base64-encoded cryptographically random 32-byte key in the process environment.
+The wrapper provisions the toolchain and JDK. Windows has the equivalent `kotlin.bat`; set `JWT_SECRET` to a Base64-encoded cryptographically random 32-byte key in the process environment.
 
 Open `demo.http` in IntelliJ's HTTP Client to run registration → login → `/me`, then the failure cases. The server listens on `127.0.0.1:8080`; stop it with Ctrl-C. No signing key is committed and startup fails if it is absent, malformed or shorter than 32 bytes. Preserve the same key across restarts/deployments when tokens should stay valid; changing it invalidates existing tokens.
 
@@ -34,7 +34,7 @@ This module belongs to the parent Toolchain project, alongside the [local Ktor a
 
 The configured destination is `docker.io/vergauwensimon/avans-college-auth:demo-1` (also tagged `latest`). Jib uses `credHelper: desktop` to read Docker Desktop's stored Docker Hub login. No registry secret is written to this project. The image targets `linux/amd64` with Java 21 and binds to `0.0.0.0`.
 
-[render.yaml](render.yaml) defines an image-backed web service, `/health`, port 10000 and bounded JVM memory. Publish the image before creating the service. Supply `JWT_SECRET_BASE64` privately in Render; `sync: false` leaves it for setup. For manual service creation, copy the same environment and health settings. Keep Docker Command empty. A private Docker Hub repository needs separate pull credentials in Render; Desktop's credentials remain local.
+[render.yaml](render.yaml) defines an image-backed web service, `/health`, port 10000 and bounded JVM memory. Publish the image before creating the service. Supply `JWT_SECRET` privately in Render; `sync: false` leaves it for setup. For manual service creation, copy the same environment and health settings. Keep Docker Command empty. A private Docker Hub repository needs separate pull credentials in Render; Desktop's credentials remain local.
 
 The signing key is injected at runtime and is not baked into the image. Users are in memory and reset on each deployment. Use the Render HTTPS URL as `@base` in `demo.http`. See the [deployment walkthrough](../examples/deployment/README.md) for the webhook demo.
 

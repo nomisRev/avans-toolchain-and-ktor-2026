@@ -132,7 +132,7 @@ val token = JWT.create()
 The server reads the key from the environment. The client receives only the token.
 
 <!--
-From Tokens.kt. A cryptographic library performs signing; we are not implementing JWT crypto ourselves. The demo requires JWT_SECRET_BASE64, decodes it and refuses keys shorter than 32 bytes. A length check cannot establish entropy: generate it with openssl rand -base64 32. Never derive this signing key from a user's password. HS256 uses a shared secret, so every verifier holding it can also issue tokens. Asymmetric signing is the next step when that trust model does not fit.
+From Tokens.kt. A cryptographic library performs signing; we are not implementing JWT crypto ourselves. The demo requires JWT_SECRET, decodes it and refuses keys shorter than 32 bytes. A length check cannot establish entropy: generate it with openssl rand -base64 32. Never derive this signing key from a user's password. HS256 uses a shared secret, so every verifier holding it can also issue tokens. Asymmetric signing is the next step when that trust model does not fit.
 https://www.rfc-editor.org/rfc/rfc8725
 -->
 
@@ -173,11 +173,10 @@ fun userAuthentication(tokens: Tokens, users: Users) =
   jwt<User>("access-token") {
     verifier(tokens.verifier)
     validate { credential ->
-      val userId = credential.payload.subject
-      
-      credential.payload.subject
-        ?.takeIf(String::isNotBlank)
-        ?.let(users::byId)
+        User(
+            id = credential.payload.subject,
+            username = credential.payload.getClaim("username").asString()
+        )
     }
   }
 ```
@@ -227,7 +226,7 @@ class: compact
 ```bash
 cd avans-college/auth-demo
 ./kotlin test
-export JWT_SECRET_BASE64="$(openssl rand -base64 32)"
+export JWT_SECRET="$(openssl rand -base64 32)"
 ./kotlin run
 ```
 
@@ -307,7 +306,7 @@ class: compact
 | --- | --- | --- |
 | Read `Authorization: Bearer <token>` | `jwt<User>("access-token")` | **401** |
 | Check `alg`, signature, `iss`, `aud`, `exp` | `verifier(tokens.verifier)` | **401** |
-| Load the user named by `sub` | `validate { … users::byId }` | **401** |
+| Validate (& transform) the credentials using its claims | `validate { ... }` | **401** |
 | Check the roles the route requires | `withRoles { … }` | **403** |
 | Run the handler with `call.principal` | `authenticateWith(…)` | — |
 
@@ -330,6 +329,23 @@ fun apiClient(store: TokenStore): HttpClient =
   HttpClient(OkHttp) {
     defaultRequest { url("https://$ApiHost/") }
     install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+  }
+```
+
+---
+magicMove: true
+class: compact
+---
+
+# One Ktor `HttpClient` for the whole Android app
+
+```kotlin{7-15}
+const val ApiHost = "avans-college-auth.onrender.com"
+
+fun apiClient(store: TokenStore): HttpClient =
+  HttpClient(OkHttp) {
+    defaultRequest { url("https://$ApiHost/") }
+    install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
     install(Auth) {
       bearer {
         loadTokens {
@@ -341,16 +357,6 @@ fun apiClient(store: TokenStore): HttpClient =
     }
   }
 ```
-
-`loadTokens` supplies the header. `sendWithoutRequest` limits it to our host.
-
-<!--
-Dependencies: io.ktor:ktor-client-okhttp, ktor-client-auth, ktor-client-content-negotiation, ktor-serialization-kotlinx-json (3.6.0). OkHttp is the usual Android engine. Create the client once (Application, or your DI graph) and close it when the app scope ends.
-sendWithoutRequest: without it the plugin first sends the request without a token, waits for the 401 and then retries. Restricting it to our host stops the token leaking to any other URL the same client calls.
-refreshTokens is called after a 401. The demo has no refresh tokens, so it returns null and the 401 reaches the app, which shows the login screen. With refresh tokens, this is where you call the refresh endpoint and return new BearerTokens.
-ignoreUnknownKeys: the server's AccessToken also contains tokenType; without it the client crashed while decoding the login response. The server may add fields; the client should not break.
-This code and the next two slides compiled and ran against the demo server: 401 before login, 200 after, 403 for a student on a teacher route.
--->
 
 ---
 class: compact
@@ -365,11 +371,46 @@ class AuthApi(private val client: HttpClient, private val store: TokenStore) {
       contentType(ContentType.Application.Json)
       setBody(Credentials(username, password))
     }
-    if (response.status != HttpStatusCode.OK) return false
-    store.accessToken = response.body<AccessToken>().accessToken
-    client.clearAuthTokens()
-    return true
   }
+}
+```
+
+---
+class: compact
+---
+
+# Log in once, then the plugin adds the header
+
+```kotlin
+class AuthApi(private val client: HttpClient, private val store: TokenStore) {
+  suspend fun login(username: String, password: String): Boolean {
+    val response = client.post("auth/login") {
+      contentType(ContentType.Application.Json)
+      setBody(Credentials(username, password))
+    }
+
+    return if (response.status != HttpStatusCode.OK) {
+        false
+    } else {
+        store.accessToken = response.body<AccessToken>().accessToken
+        client.clearAuthTokens()
+        true
+    }
+  }
+}
+```
+
+The bearer provider caches its token: `clearAuthTokens()` after login and logout.
+
+---
+class: compact
+---
+
+# Log in once, then the plugin adds the header
+
+```kotlin
+class AuthApi(private val client: HttpClient, private val store: TokenStore) {
+  suspend fun login(username: String, password: String): Boolean { ... }
 
   suspend fun me(): User? {
     val response = client.get("me")
@@ -378,13 +419,6 @@ class AuthApi(private val client: HttpClient, private val store: TokenStore) {
 }
 ```
 
-The bearer provider caches its token: `clearAuthTokens()` after login and logout.
-
-<!--
-Credentials, AccessToken and User are @Serializable copies of the server's DTOs on the client side (or a shared KMP module). TokenStore is a small class holding accessToken: String?; logout() sets it to null and calls clearAuthTokens() too.
-Without clearAuthTokens() the provider keeps the token it loaded first, so logging in as another account would keep sending the old Authorization header.
-me() returns null on 401 instead of throwing; expectSuccess is false by default.
--->
 
 ---
 class: compact
@@ -400,13 +434,13 @@ sealed interface ProfileState {
 }
 
 class ProfileViewModel(private val api: AuthApi) : ViewModel() {
-  private val _state = MutableStateFlow<ProfileState>(ProfileState.Loading)
   val state: StateFlow<ProfileState> = _state
+    field = MutableStateFlow<ProfileState>(ProfileState.Loading)
 
   fun load() {
     viewModelScope.launch {
       val user = api.me()
-      _state.value = user?.let(ProfileState::Loaded) ?: ProfileState.LoggedOut
+        state.value = user?.let(ProfileState::Loaded) ?: ProfileState.LoggedOut
     }
   }
 }
@@ -473,7 +507,7 @@ enum class Role : AuthenticationRole { Student, Teacher, Admin }
 
 fun roleAuthentication(tokens: Tokens, users: Users) =
   userAuthentication(tokens, users).withRoles { user ->
-    users.roles(user.id)
+    setOf(user.role)
   }
 ```
 
@@ -547,7 +581,7 @@ class: compact
 
 # Ownership is a check in the handler
 
-```kotlin
+```kotlin{5-7}
 authenticateWith(roleAuth) {
   get("/students/{id}/grades") {
     val user: User = call.principal

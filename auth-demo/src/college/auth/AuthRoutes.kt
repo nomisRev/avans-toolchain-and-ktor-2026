@@ -49,7 +49,7 @@ fun Route.authRoutes(deps: Dependencies) {
         else call.respond(token)
     }
 
-    val userAuth = userAuthentication(deps.tokens, deps.users)
+    val userAuth = userAuthentication(deps.tokens)
     authenticateWith(userAuth) {
         get("/me") {
             val user: User = call.principal

@@ -9,6 +9,7 @@ dependencies:
   - $ktor.server.bodyLimit
   - $ktor.server.rateLimit
   - $ktor.server.config.yaml
+  - $ktor.client.auth
   - org.bouncycastle:bcprov-jdk18on:1.84
   - ch.qos.logback:logback-classic:1.5.35
 
@@ -35,7 +36,7 @@ plugins:
       jreVersion: 25
       platforms: [linux/amd64]
       imageTag: 1.0.1
-      hostEnvironmentVariables: [JWT_SECRET_BASE64]
+      hostEnvironmentVariables: [JWT_SECRET]
       externalRegistry:
         namespace: vergauwensimon
         project: avans-college-auth
