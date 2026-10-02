@@ -1,10 +1,14 @@
 package college.auth
 
+import io.ktor.server.auth.AuthenticationRole
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.Serializable
 
-@Serializable data class User(val id: String, val username: String)
+enum class Role : AuthenticationRole { USER, ADMIN; }
+
+@Serializable
+data class User(val id: String, val username: String, val role: Role)
 
 class StoredUser(val user: User, val password: PasswordHash)
 
@@ -25,7 +29,7 @@ class InMemoryUsers : Users {
     override fun byId(id: String): User? = users.values.firstOrNull { it.user.id == id }?.user
 
     override fun create(username: String, password: PasswordHash): User? {
-        val user = User(UUID.randomUUID().toString(), username)
+        val user = User(UUID.randomUUID().toString(), username, Role.USER)
         return if (users.putIfAbsent(username, StoredUser(user, password)) == null) user else null
     }
 }
