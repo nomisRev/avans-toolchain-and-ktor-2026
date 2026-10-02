@@ -1,7 +1,9 @@
 # Avans College — Ktor in practice
 
-Slidev deck using the sibling `slidedev-theme-kotlin` theme, matching the existing Kotlin and Ktor talks. Slides are in English; the optional tooling deck retains the students' opening question in Dutch.
+In [auth-demo](/auth-demo) you can find the example project used for the live demo, and authentication section of the slides.
+The slides are in the GitHub Pages [here](https://nomisrev.github.io/avans-toolchain-and-ktor-2026/).
 
+# Hoe met de slides werken
 ## Present
 
 Node.js 20.12 or newer:
