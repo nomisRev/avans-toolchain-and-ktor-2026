@@ -22,11 +22,12 @@ import io.ktor.server.plugins.ratelimit.rateLimit
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
-import io.ktor.server.routing.RoutingContext
+import io.ktor.server.routing.Routing
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import io.ktor.server.util.getOrFail
 import kotlin.time.Duration.Companion.minutes
+
+private val RateLimitName = RateLimitName("credentials")
 
 fun Application.app(deps: Dependencies) {
     install(ContentNegotiation) { json() }
@@ -36,48 +37,15 @@ fun Application.app(deps: Dependencies) {
             call.respond(HttpStatusCode.BadRequest, ApiError("Invalid request body"))
         }
     }
+
     install(RateLimit) {
-        register(RateLimitName("credentials")) {
-            // One shared budget for this local demo, not an IP/account policy.
-            rateLimiter(limit = 20, refillPeriod = 1.minutes)
+        register(RateLimitName) {
+            rateLimiter(limit = 10, refillPeriod = 1.minutes)
         }
     }
-    val userAuth = userAuthentication(deps.tokens, deps.users)
+
     routing {
-
-
-        fun RoutingContext.userId(): Long =
-            call.pathParameters
-                .getOrFail<Long>("userId")
-
-        context(context: RoutingContext)
-        suspend fun User.respond() {
-            context.call.respond(this)
-        }
-
-        get("/health") {
-            val id = userId()
-
-
-            call.respondText("OK")
-        }
-
-        get {
-            val id = userId()
-        }
-
-        rateLimit(RateLimitName("credentials")) { authRoutes(deps.auth) }
-
-        val config = HikariConfig()
-
-
-        authenticateWith(userAuth) {
-            get("/me") {
-                val user: User = call.principal
-                call.response.headers.append(HttpHeaders.CacheControl, "no-store")
-                // call.respond(user)
-                user.respond()
-            }
-        }
+        health()
+        rateLimit(RateLimitName) { authRoutes(deps) }
     }
 }

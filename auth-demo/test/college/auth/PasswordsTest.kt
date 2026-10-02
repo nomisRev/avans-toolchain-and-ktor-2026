@@ -20,7 +20,7 @@ class PasswordsTest {
 
     @Test
     fun `verification uses stored parameters after changing the default cost`() = runBlocking {
-        val original = Passwords(Argon2Cost(memoryKiB = 19_456, iterations = 2, parallelism = 1))
+        val original = Passwords(Argon2Config(memoryKiB = 19_456, iterations = 2, parallelism = 1))
         val stored = original.hash("migration keeps this password working")
         assertTrue(Passwords().verify("migration keeps this password working", stored))
     }

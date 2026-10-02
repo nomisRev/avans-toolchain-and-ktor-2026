@@ -22,11 +22,12 @@ import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.text.Charsets.UTF_8
 
 class AuthenticationTest {
     private val key = ByteArray(32) { (it + 1).toByte() } // Test-only key, never used by main().
 
-    private fun settings() = JwtSettings(key)
+    private fun settings() = JwtSettings(key.toString(UTF_8))
 
     private val password = "a sufficiently long demo password"
 

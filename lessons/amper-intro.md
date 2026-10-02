@@ -200,40 +200,6 @@ Transition for the short route: “That's the project model and local feedback l
 -->
 
 ---
-class: compact
----
-
-# A test runs Ktor without starting Netty
-
-```kotlin
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
-import io.ktor.server.routing.routing
-import io.ktor.server.testing.testApplication
-import kotlin.test.Test
-import kotlin.test.assertEquals
-
-class ApplicationTest {
-  @Test
-  fun healthResponds() = testApplication {
-    application {
-      routing { get("/health") { call.respondText("OK") } }
-    }
-    assertEquals("OK", client.get("/health").bodyAsText())
-  }
-}
-```
-
-`test/ApplicationTest.kt` → `./kotlin test`
-
-<!--
-Optional demo, 3–5 minutes. ApplicationTest is a JUnit-discoverable test class. Run it, change expected OK to broken, run again, then restore. This is a test-host demonstration; later architecture tests will install the actual app instead of defining a route inline.
-Same Kotlin test body works in the Gradle layout with the dependencies on the following slides.
--->
-
----
 class: tree-dense
 ---
 
@@ -369,6 +335,7 @@ modules:
   - auth-demo
   - plugins/jib-plugin
   - plugins/ktor-plugin
+
 plugins:
   - plugins/jib-plugin
   - plugins/ktor-plugin
@@ -387,19 +354,19 @@ class: compact
 # Enable the plugin for our auth demo
 
 ```yaml toolchain
-# auth-demo/module.yaml — alongside dependencies/settings
-plugins:
   ktor-plugin:
     enabled: true
     docker:
-      jreVersion: 21
-      platforms: [linux/amd64]
-      localImageName: avans-college-auth
-      imageTag: demo-1
+      jreVersion: 25
+      imageTag: 1.0.1
+      externalRegistry:
+        namespace: vergauwensimon
+        project: avans-college-auth
+        credHelper: desktop
 ```
 
 ```bash
-./kotlin do buildImage
+./kotlin do publishImage
 ```
 
 Follow `plugin.yaml` → Kotlin task action → Jib Core.
